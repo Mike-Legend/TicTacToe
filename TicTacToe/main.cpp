@@ -594,7 +594,9 @@ void PlayerThreadEntrypoint(Player *currentPlayer)
 	//   opposite, to what you did in the first TODO of this function.
 	///////////////////////////////////////////////////////////////////////////////////
 
-
+	PlayerPool poolOfPlayers;
+	poolOfPlayers.flag = false;
+	poolOfPlayers.cv->notify_all();
 }
 
 ///////////////////////////////////////////////////////////////////////////////////
@@ -761,12 +763,9 @@ int main(int argc, char **argv)
 	// TODO:: Wait for all players to be ready 
 	///////////////////////////////////////////////////////////////////////////////////
 
-	for (int i = 0; i < totalPlayerCount; i++)
-	{
-		std::unique_lock<std::mutex> lock(*perPlayerData[i].mtx);
-		perThreadData[i].cv->wait(lock, [&] { return perThreadData[i].complete == false; });
-	}
-
+	std::unique_lock<std::mutex> lock(*poolOfPlayers.mtx);
+	poolOfPlayers.cv->wait(lock, [&] { return poolOfPlayers.flag == false; });
+	
 	///////////////////////////////////////////////////////////////////////////////////
 	// TODO:: Notify all waiting threads that they can start playing.
 	///////////////////////////////////////////////////////////////////////////////////
