@@ -714,8 +714,13 @@ int main(int argc, char **argv)
 	// TODO:: Initialize your data in the pool of players
 	///////////////////////////////////////////////////////////////////////////////////
 
+	std::mutex mtx;
+	std::condition_variable cv;
 	poolOfPlayers.totalPlayerThreads = totalPlayerCount;
-
+	poolOfPlayers.cv = &cv;
+	poolOfPlayers.mtx = &mtx;
+	poolOfPlayers.flag = true;
+	
 	// Initialize each game
 	for (int i = 0; i < totalGameCount; i++) 
 	{
@@ -747,14 +752,20 @@ int main(int argc, char **argv)
 	//   the PlayerThreadEntrypoint function. Make sure to detach the threads.
 	///////////////////////////////////////////////////////////////////////////////////
 
-	for (int i = 0; i < totalPlayerCount; i++) {
-
+	for (int i = 0; i < totalPlayerCount; i++)
+	{
+		std::thread(PlayerThreadEntrypoint, &perPlayerData[i]).detach();
 	}
 
 	///////////////////////////////////////////////////////////////////////////////////
 	// TODO:: Wait for all players to be ready 
 	///////////////////////////////////////////////////////////////////////////////////
 
+	for (int i = 0; i < totalPlayerCount; i++)
+	{
+		std::unique_lock<std::mutex> lock(*perPlayerData[i].mtx);
+		perThreadData[i].cv->wait(lock, [&] { return perThreadData[i].complete == false; });
+	}
 
 	///////////////////////////////////////////////////////////////////////////////////
 	// TODO:: Notify all waiting threads that they can start playing.
