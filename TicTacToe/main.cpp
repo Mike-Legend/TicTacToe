@@ -157,6 +157,9 @@ struct PlayerPool
 	//   player threads in a thread-safe manner and implement the starting gun logic.
 	///////////////////////////////////////////////////////////////////////////////////
 
+	std::mutex* mtx;
+	std::condition_variable* cv;
+	bool flag;
 	int totalPlayerThreads;
 };
 
@@ -262,8 +265,6 @@ void PrintGameBoard(const Game *currentGame)
 	// This portion of the lab requires you to write the LogSync and Log functions. Get
 	//   your threads running and shutting down before attempting these functions.
 	///////////////////////////////////////////////////////////////////////////////////
-
-
 
 	for (int row = 0; row < 3; row++)
 	{
@@ -428,6 +429,7 @@ void PlayGame(Player *currentPlayer, Game *currentGame)
 				// TODO:: The game is not over yet. We need to notify the other player that it's
 				//   their turn and then we must wait until they tell us it's our turn.
 				///////////////////////////////////////////////////////////////////////////////////
+
 
 
 				continue;
@@ -712,7 +714,7 @@ int main(int argc, char **argv)
 	// TODO:: Initialize your data in the pool of players
 	///////////////////////////////////////////////////////////////////////////////////
 
-
+	poolOfPlayers.totalPlayerThreads = totalPlayerCount;
 
 	// Initialize each game
 	for (int i = 0; i < totalGameCount; i++) 
@@ -745,6 +747,9 @@ int main(int argc, char **argv)
 	//   the PlayerThreadEntrypoint function. Make sure to detach the threads.
 	///////////////////////////////////////////////////////////////////////////////////
 
+	for (int i = 0; i < totalPlayerCount; i++) {
+
+	}
 
 	///////////////////////////////////////////////////////////////////////////////////
 	// TODO:: Wait for all players to be ready 
