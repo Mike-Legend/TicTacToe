@@ -586,8 +586,8 @@ void PlayerThreadEntrypoint(Player *currentPlayer, PlayerPool *poolOfPlayers)
 
 	{
 		std::lock_guard<std::mutex> lock(*poolOfPlayers->mtx1);
-		poolOfPlayers->totalPlayerThreads += 1;
-		poolOfPlayers->cv->notify_all();
+		*poolOfPlayers->totalPlayerThreads += 1;
+		poolOfPlayers->cv->notify_one();
 	}
 	
 	{
@@ -607,7 +607,7 @@ void PlayerThreadEntrypoint(Player *currentPlayer, PlayerPool *poolOfPlayers)
 
 	{
 		*poolOfPlayers->totalPlayerThreads -= 1;
-		poolOfPlayers->cv->notify_all();
+		poolOfPlayers->cv->notify_one();
 	}
 }
 
@@ -738,7 +738,7 @@ int main(int argc, char **argv)
 	poolOfPlayers.cv2 = &cv2;
 	poolOfPlayers.mtx = &mtx;
 	poolOfPlayers.mtx1 = &mtx1;
-	poolOfPlayers.mtx1 = &mtx2;
+	poolOfPlayers.mtx2 = &mtx2;
 	poolOfPlayers.flag = &flag;
 	
 	// Initialize each game
@@ -782,7 +782,7 @@ int main(int argc, char **argv)
 	///////////////////////////////////////////////////////////////////////////////////
 
 	{
-		std::unique_lock<std::mutex> lock(*poolOfPlayers.mtx);
+		std::unique_lock<std::mutex> lock(*poolOfPlayers.mtx1);
 		poolOfPlayers.cv->wait(lock, [&] { return *poolOfPlayers.totalPlayerThreads == totalPlayerCount; });
 	}
 	
@@ -801,7 +801,7 @@ int main(int argc, char **argv)
 	///////////////////////////////////////////////////////////////////////////////////
 
 	{
-		std::unique_lock<std::mutex> lock3(*poolOfPlayers.mtx);
+		std::unique_lock<std::mutex> lock3(*poolOfPlayers.mtx1);
 		poolOfPlayers.cv->wait(lock3, [&] { return *poolOfPlayers.totalPlayerThreads == 0; });
 	}
 	
