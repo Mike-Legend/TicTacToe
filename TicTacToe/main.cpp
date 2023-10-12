@@ -204,7 +204,7 @@ void LogSync(LogSyncOperation operationToPerform)
 	//  NOTE: For this function you MAY use static to create your mutex
 	///////////////////////////////////////////////////////////////////////////////////
 	
-	std::mutex locker;
+	static std::mutex locker;
 	if (operationToPerform == LogSyncOperation::Lock) {
 		locker.lock();
 	}
