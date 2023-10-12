@@ -247,7 +247,6 @@ int Log(const char *format, ...)
 	//   but all console output will be synchronized via LogSync.
 	///////////////////////////////////////////////////////////////////////////////////
 
-	//use logsync
 	va_list mainList;
 	va_start(mainList, *format);
 	const char* sequence;
