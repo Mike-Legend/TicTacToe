@@ -586,8 +586,12 @@ void PlayerThreadEntrypoint(Player *currentPlayer)
 	///////////////////////////////////////////////////////////////////////////////////
 
 	PlayerPool poolOfPlayers;
-	poolOfPlayers.flag = false;
+	std::lock_guard<std::mutex> lock(*poolOfPlayers.mtx1);
+	*poolOfPlayers.totalPlayerThreads += 1;
 	poolOfPlayers.cv->notify_all();
+
+	std::unique_lock<std::mutex> lock2(*poolOfPlayers.mtx2);
+	poolOfPlayers.cv2->wait(lock2, [&] { return *poolOfPlayers.flag; });
 
 	// Attempt to play each game, all of the game logic will occur in this function
 	printf("Player %d running\n", currentPlayer->id);
@@ -727,8 +731,8 @@ int main(int argc, char **argv)
 	poolOfPlayers.cv2 = &cv2;
 	poolOfPlayers.mtx = &mtx;
 	poolOfPlayers.mtx1 = &mtx1;
-	poolOfPlayers.mtx1 = &mtx1;
-	*poolOfPlayers.flag = true;
+	poolOfPlayers.mtx1 = &mtx2;
+	*poolOfPlayers.flag = false;
 	
 	// Initialize each game
 	for (int i = 0; i < totalGameCount; i++) 
@@ -771,12 +775,15 @@ int main(int argc, char **argv)
 	///////////////////////////////////////////////////////////////////////////////////
 
 	std::unique_lock<std::mutex> lock(*poolOfPlayers.mtx);
-	poolOfPlayers.cv->wait(lock, [&] { return poolOfPlayers.flag == false; });
+	poolOfPlayers.cv->wait(lock, [&] { return *poolOfPlayers.totalPlayerThreads == totalPlayerCount; });
 	
 	///////////////////////////////////////////////////////////////////////////////////
 	// TODO:: Notify all waiting threads that they can start playing.
 	///////////////////////////////////////////////////////////////////////////////////
 
+	std::lock_guard<std::mutex> lock2(*poolOfPlayers.mtx2);
+	*poolOfPlayers.flag = true;
+	poolOfPlayers.cv2->notify_all();
 
 	///////////////////////////////////////////////////////////////////////////////////
 	// TODO:: Wait for all detached player threads to complete.
