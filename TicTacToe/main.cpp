@@ -789,6 +789,8 @@ int main(int argc, char **argv)
 	// TODO:: Wait for all detached player threads to complete.
 	///////////////////////////////////////////////////////////////////////////////////
 
+	std::unique_lock<std::mutex> lock3(*poolOfPlayers.mtx);
+	poolOfPlayers.cv->wait(lock3, [&] { return *poolOfPlayers.totalPlayerThreads == 0; });
 
 	PrintResults(perPlayerData, totalPlayerCount, perGameData, totalGameCount);
 
@@ -796,6 +798,8 @@ int main(int argc, char **argv)
 	// TODO:: Cleanup
 	///////////////////////////////////////////////////////////////////////////////////
 
+	delete[] perGameData;
+	delete[] perPlayerData;
 
 	Pause();
 	return 0;
