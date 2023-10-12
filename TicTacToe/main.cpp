@@ -203,10 +203,14 @@ void LogSync(LogSyncOperation operationToPerform)
 	//
 	//  NOTE: For this function you MAY use static to create your mutex
 	///////////////////////////////////////////////////////////////////////////////////
-
-	LogSync(LogSyncOperation::Lock);
-	printf("%d", operationToPerform);
-	LogSync(LogSyncOperation::Unlock);
+	
+	std::mutex locker;
+	if (operationToPerform == LogSyncOperation::Lock) {
+		locker.lock();
+	}
+	else {
+		locker.unlock();
+	}
 }
 
 ///////////////////////////////////////////////////////////////////////////////////
@@ -250,7 +254,9 @@ int Log(const char *format, ...)
 	for (int i = 0; i < *format; i++) {
 		sequence = va_arg(mainList, const char*);
 	}
+	LogSync(LogSyncOperation::Lock);
 	vprintf(sequence, mainList);
+	LogSync(LogSyncOperation::Unlock);
 	va_end(mainList);
 	return result;
 }
