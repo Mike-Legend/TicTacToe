@@ -157,10 +157,11 @@ struct PlayerPool
 	//   player threads in a thread-safe manner and implement the starting gun logic.
 	///////////////////////////////////////////////////////////////////////////////////
 
-	std::mutex* mtx;
-	std::condition_variable* cv;
-	bool flag;
-	int totalPlayerThreads;
+	std::mutex* mtx, *mtx1, *mtx2;
+	std::condition_variable *cv, *cv2;
+	bool *flag;
+	int *totalPlayerThreads;
+	int id;
 };
 
 ///////////////////////////////////////////////////////////////////////////////////
@@ -584,6 +585,10 @@ void PlayerThreadEntrypoint(Player *currentPlayer)
 	//
 	///////////////////////////////////////////////////////////////////////////////////
 
+	PlayerPool poolOfPlayers;
+	poolOfPlayers.flag = false;
+	poolOfPlayers.cv->notify_all();
+
 	// Attempt to play each game, all of the game logic will occur in this function
 	printf("Player %d running\n", currentPlayer->id);
 	TryToPlayEachGame(currentPlayer);
@@ -594,7 +599,6 @@ void PlayerThreadEntrypoint(Player *currentPlayer)
 	//   opposite, to what you did in the first TODO of this function.
 	///////////////////////////////////////////////////////////////////////////////////
 
-	PlayerPool poolOfPlayers;
 	poolOfPlayers.flag = false;
 	poolOfPlayers.cv->notify_all();
 }
@@ -716,12 +720,15 @@ int main(int argc, char **argv)
 	// TODO:: Initialize your data in the pool of players
 	///////////////////////////////////////////////////////////////////////////////////
 
-	std::mutex mtx;
-	std::condition_variable cv;
-	poolOfPlayers.totalPlayerThreads = totalPlayerCount;
+	std::mutex mtx, mtx1, mtx2;
+	std::condition_variable cv, cv2;
+	*poolOfPlayers.totalPlayerThreads = 0;
 	poolOfPlayers.cv = &cv;
+	poolOfPlayers.cv2 = &cv2;
 	poolOfPlayers.mtx = &mtx;
-	poolOfPlayers.flag = true;
+	poolOfPlayers.mtx1 = &mtx1;
+	poolOfPlayers.mtx1 = &mtx1;
+	*poolOfPlayers.flag = true;
 	
 	// Initialize each game
 	for (int i = 0; i < totalGameCount; i++) 
