@@ -248,13 +248,16 @@ int Log(const char *format, ...)
 	///////////////////////////////////////////////////////////////////////////////////
 
 	va_list mainList;
-	va_start(mainList, *format);
-	const char* sequence;
-	for (int i = 0; i < *format; i++) {
+	va_start(mainList, format);
+	//const char* sequence[] = format;
+	/*for (int i = 0; i < format; i++) {
 		sequence = va_arg(mainList, const char*);
+	}*/
+	while (format) {
+		format = va_arg(mainList, const char*);
 	}
 	LogSync(LogSyncOperation::Lock);
-	vprintf(sequence, mainList);
+	result = vprintf(format, mainList);
 	LogSync(LogSyncOperation::Unlock);
 	va_end(mainList);
 	return result;
