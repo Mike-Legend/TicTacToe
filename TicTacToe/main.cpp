@@ -561,7 +561,7 @@ void TryToPlayEachGame(Player *currentPlayer)
 // Arguments:
 //   currentPlayer - Pointer to a player struct that is unique to this thread
 ///////////////////////////////////////////////////////////////////////////////////
-void PlayerThreadEntrypoint(Player *currentPlayer, PlayerPool *poolOfPlayers)
+void PlayerThreadEntrypoint(Player *currentPlayer)
 {
 	printf("Player %d waiting on starting gun\n", currentPlayer->id);
 
@@ -585,19 +585,19 @@ void PlayerThreadEntrypoint(Player *currentPlayer, PlayerPool *poolOfPlayers)
 	///////////////////////////////////////////////////////////////////////////////////
 
 	{
-		std::lock_guard<std::mutex> lock(*poolOfPlayers->mtx1);
-		*poolOfPlayers->totalPlayerThreads += 1;
-		poolOfPlayers->cv->notify_one();
+		std::lock_guard<std::mutex> lock(*currentPlayer->playerPool->mtx1);
+		*currentPlayer->playerPool->totalPlayerThreads += 1;
+		currentPlayer->playerPool->cv->notify_one();
 	}
 	
 	{
-		std::unique_lock<std::mutex> lock(*poolOfPlayers->mtx2);
-		poolOfPlayers->cv2->wait(lock, [&] { return *poolOfPlayers->flag; });
+		std::unique_lock<std::mutex> lock(*currentPlayer->playerPool->mtx2);
+		currentPlayer->playerPool->cv2->wait(lock, [&] { return *currentPlayer->playerPool->flag; });
 	}
 	
 	// Attempt to play each game, all of the game logic will occur in this function
 	printf("Player %d running\n", currentPlayer->id);
-	//TryToPlayEachGame(currentPlayer);
+	TryToPlayEachGame(currentPlayer);
 
 	///////////////////////////////////////////////////////////////////////////////////
 	// TODO:: Let main know there's one less player thread running. You will be using the
@@ -606,8 +606,8 @@ void PlayerThreadEntrypoint(Player *currentPlayer, PlayerPool *poolOfPlayers)
 	///////////////////////////////////////////////////////////////////////////////////
 
 	{
-		*poolOfPlayers->totalPlayerThreads -= 1;
-		poolOfPlayers->cv->notify_one();
+		*currentPlayer->playerPool->totalPlayerThreads -= 1;
+		currentPlayer->playerPool->cv->notify_one();
 	}
 }
 
@@ -774,7 +774,7 @@ int main(int argc, char **argv)
 
 	for (int i = 0; i < totalPlayerCount; i++)
 	{
-		std::thread(PlayerThreadEntrypoint, &perPlayerData[i], &poolOfPlayers).detach();
+		std::thread(PlayerThreadEntrypoint, &perPlayerData[i]).detach();
 	}
 
 	///////////////////////////////////////////////////////////////////////////////////
