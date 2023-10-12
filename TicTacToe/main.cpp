@@ -603,7 +603,7 @@ void PlayerThreadEntrypoint(Player *currentPlayer)
 	//   opposite, to what you did in the first TODO of this function.
 	///////////////////////////////////////////////////////////////////////////////////
 
-	poolOfPlayers.flag = false;
+	*poolOfPlayers.totalPlayerThreads -= 1;
 	poolOfPlayers.cv->notify_all();
 }
 
