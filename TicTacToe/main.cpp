@@ -5,6 +5,7 @@
 #include <mutex>
 #include <condition_variable>
 #include <random>
+#include <stdarg.h>
 ///////////////////////////////////////////////////////////////////////////////////
 
 // Include file and line numbers for memory leak detection for visual studio in debug mode
@@ -157,7 +158,7 @@ struct PlayerPool
 	//   player threads in a thread-safe manner and implement the starting gun logic.
 	///////////////////////////////////////////////////////////////////////////////////
 
-	std::mutex* mtx, *mtx1, *mtx2;
+	std::mutex *mtx1, *mtx2;
 	std::condition_variable *cv, *cv2;
 	bool *flag;
 	int *totalPlayerThreads;
@@ -203,9 +204,9 @@ void LogSync(LogSyncOperation operationToPerform)
 	//  NOTE: For this function you MAY use static to create your mutex
 	///////////////////////////////////////////////////////////////////////////////////
 
-
-
-
+	LogSync(LogSyncOperation::Lock);
+	printf("%d", operationToPerform);
+	LogSync(LogSyncOperation::Unlock);
 }
 
 ///////////////////////////////////////////////////////////////////////////////////
@@ -242,9 +243,14 @@ int Log(const char *format, ...)
 	//   but all console output will be synchronized via LogSync.
 	///////////////////////////////////////////////////////////////////////////////////
 
-
-
-
+	va_list mainList;
+	va_start(mainList, *format);
+	const char* sequence;
+	for (int i = 0; i < *format; i++) {
+		sequence = va_arg(mainList, const char*);
+	}
+	vprintf(sequence, mainList);
+	va_end(mainList);
 	return result;
 }
 
@@ -742,7 +748,7 @@ int main(int argc, char **argv)
 	// TODO:: Initialize your data in the pool of players
 	///////////////////////////////////////////////////////////////////////////////////
 
-	std::mutex mtx, mtx1, mtx2;
+	std::mutex mtx1, mtx2;
 	std::condition_variable cv, cv2;
 	int totalPlayerThreads = 0;
 	bool flag = false;
@@ -750,7 +756,6 @@ int main(int argc, char **argv)
 	poolOfPlayers.totalPlayerThreads = &totalPlayerThreads;
 	poolOfPlayers.cv = &cv;
 	poolOfPlayers.cv2 = &cv2;
-	poolOfPlayers.mtx = &mtx;
 	poolOfPlayers.mtx1 = &mtx1;
 	poolOfPlayers.mtx2 = &mtx2;
 	poolOfPlayers.flag = &flag;
