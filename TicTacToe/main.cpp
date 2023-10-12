@@ -161,7 +161,6 @@ struct PlayerPool
 	std::condition_variable *cv, *cv2;
 	bool *flag;
 	int *totalPlayerThreads;
-	int id;
 };
 
 ///////////////////////////////////////////////////////////////////////////////////
@@ -562,7 +561,7 @@ void TryToPlayEachGame(Player *currentPlayer)
 // Arguments:
 //   currentPlayer - Pointer to a player struct that is unique to this thread
 ///////////////////////////////////////////////////////////////////////////////////
-void PlayerThreadEntrypoint(Player *currentPlayer)
+void PlayerThreadEntrypoint(Player *currentPlayer, PlayerPool &poolOfPlayers)
 {
 	printf("Player %d waiting on starting gun\n", currentPlayer->id);
 
@@ -585,7 +584,6 @@ void PlayerThreadEntrypoint(Player *currentPlayer)
 	//
 	///////////////////////////////////////////////////////////////////////////////////
 
-	PlayerPool poolOfPlayers;
 	std::lock_guard<std::mutex> lock(*poolOfPlayers.mtx1);
 	*poolOfPlayers.totalPlayerThreads += 1;
 	poolOfPlayers.cv->notify_all();
@@ -595,7 +593,7 @@ void PlayerThreadEntrypoint(Player *currentPlayer)
 
 	// Attempt to play each game, all of the game logic will occur in this function
 	printf("Player %d running\n", currentPlayer->id);
-	TryToPlayEachGame(currentPlayer);
+	//TryToPlayEachGame(currentPlayer);
 
 	///////////////////////////////////////////////////////////////////////////////////
 	// TODO:: Let main know there's one less player thread running. You will be using the
@@ -726,13 +724,16 @@ int main(int argc, char **argv)
 
 	std::mutex mtx, mtx1, mtx2;
 	std::condition_variable cv, cv2;
-	*poolOfPlayers.totalPlayerThreads = 0;
+	int totalPlayerThreads = 0;
+	bool flag = false;
+
+	poolOfPlayers.totalPlayerThreads = &totalPlayerThreads;
 	poolOfPlayers.cv = &cv;
 	poolOfPlayers.cv2 = &cv2;
 	poolOfPlayers.mtx = &mtx;
 	poolOfPlayers.mtx1 = &mtx1;
 	poolOfPlayers.mtx1 = &mtx2;
-	*poolOfPlayers.flag = false;
+	poolOfPlayers.flag = &flag;
 	
 	// Initialize each game
 	for (int i = 0; i < totalGameCount; i++) 
@@ -767,7 +768,7 @@ int main(int argc, char **argv)
 
 	for (int i = 0; i < totalPlayerCount; i++)
 	{
-		std::thread(PlayerThreadEntrypoint, &perPlayerData[i]).detach();
+		std::thread(PlayerThreadEntrypoint, &perPlayerData[i], &poolOfPlayers).detach();
 	}
 
 	///////////////////////////////////////////////////////////////////////////////////
