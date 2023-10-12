@@ -459,8 +459,12 @@ void PlayGame(Player *currentPlayer, Game *currentGame)
 				//   out of the PlayGame function
 				///////////////////////////////////////////////////////////////////////////////////
 
-
-
+				if (currentGame->currentTurn == PlayerType::X) {
+					currentGame->currentTurn = PlayerType::O;
+				}
+				else {
+					currentGame->currentTurn = PlayerType::X;
+				}
 				return;
 		}
 	}
