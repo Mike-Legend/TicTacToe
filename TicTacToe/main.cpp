@@ -437,7 +437,7 @@ void PlayGame(Player *currentPlayer, Game *currentGame)
 				} else {
 					currentGame->currentTurn = PlayerType::X;
 					std::unique_lock<std::mutex> TurnLock(currentGame->gameMutex);
-					currentGame->gameCondition.wait(TurnLock, [&] { return currentGame->currentTurn == PlayerType::Y; });
+					currentGame->gameCondition.wait(TurnLock, [&] { return currentGame->currentTurn == PlayerType::O; });
 				}
 				continue;
 			case GameState::Won:
@@ -446,8 +446,12 @@ void PlayGame(Player *currentPlayer, Game *currentGame)
 				//   out of the PlayGame function.
 				///////////////////////////////////////////////////////////////////////////////////
 
-
-
+				if (currentGame->currentTurn == PlayerType::X) {
+					currentGame->currentTurn = PlayerType::O;
+				}
+				else {
+					currentGame->currentTurn = PlayerType::X;
+				}
 				return;
 			case GameState::Draw:
 				///////////////////////////////////////////////////////////////////////////////////
