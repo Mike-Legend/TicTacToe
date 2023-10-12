@@ -430,8 +430,15 @@ void PlayGame(Player *currentPlayer, Game *currentGame)
 				//   their turn and then we must wait until they tell us it's our turn.
 				///////////////////////////////////////////////////////////////////////////////////
 
-
-
+				if (currentGame->currentTurn == PlayerType::X) {
+					currentGame->currentTurn = PlayerType::O;
+					std::unique_lock<std::mutex> TurnLock(currentGame->gameMutex);
+					currentGame->gameCondition.wait(TurnLock, [&] { return currentGame->currentTurn == PlayerType::X; });
+				} else {
+					currentGame->currentTurn = PlayerType::X;
+					std::unique_lock<std::mutex> TurnLock(currentGame->gameMutex);
+					currentGame->gameCondition.wait(TurnLock, [&] { return currentGame->currentTurn == PlayerType::Y; });
+				}
 				continue;
 			case GameState::Won:
 				///////////////////////////////////////////////////////////////////////////////////
