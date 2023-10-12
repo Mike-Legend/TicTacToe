@@ -561,7 +561,7 @@ void TryToPlayEachGame(Player *currentPlayer)
 // Arguments:
 //   currentPlayer - Pointer to a player struct that is unique to this thread
 ///////////////////////////////////////////////////////////////////////////////////
-void PlayerThreadEntrypoint(Player *currentPlayer, PlayerPool &poolOfPlayers)
+void PlayerThreadEntrypoint(Player *currentPlayer, PlayerPool *poolOfPlayers)
 {
 	printf("Player %d waiting on starting gun\n", currentPlayer->id);
 
@@ -584,12 +584,12 @@ void PlayerThreadEntrypoint(Player *currentPlayer, PlayerPool &poolOfPlayers)
 	//
 	///////////////////////////////////////////////////////////////////////////////////
 
-	std::lock_guard<std::mutex> lock(*poolOfPlayers.mtx1);
-	*poolOfPlayers.totalPlayerThreads += 1;
-	poolOfPlayers.cv->notify_all();
+	std::lock_guard<std::mutex> lock(*poolOfPlayers->mtx1);
+	poolOfPlayers->totalPlayerThreads += 1;
+	poolOfPlayers->cv->notify_all();
 
-	std::unique_lock<std::mutex> lock2(*poolOfPlayers.mtx2);
-	poolOfPlayers.cv2->wait(lock2, [&] { return *poolOfPlayers.flag; });
+	std::unique_lock<std::mutex> lock2(*poolOfPlayers->mtx2);
+	poolOfPlayers->cv2->wait(lock2, [&] { return *poolOfPlayers->flag; });
 
 	// Attempt to play each game, all of the game logic will occur in this function
 	printf("Player %d running\n", currentPlayer->id);
@@ -601,8 +601,8 @@ void PlayerThreadEntrypoint(Player *currentPlayer, PlayerPool &poolOfPlayers)
 	//   opposite, to what you did in the first TODO of this function.
 	///////////////////////////////////////////////////////////////////////////////////
 
-	*poolOfPlayers.totalPlayerThreads -= 1;
-	poolOfPlayers.cv->notify_all();
+	*poolOfPlayers->totalPlayerThreads -= 1;
+	poolOfPlayers->cv->notify_all();
 }
 
 ///////////////////////////////////////////////////////////////////////////////////
