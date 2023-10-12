@@ -501,8 +501,7 @@ void JoinGame(Player *currentPlayer, Game *currentGame)
 		//   other player to join the game and play it's turn.
 		///////////////////////////////////////////////////////////////////////////////////
 
-
-
+		currentGame->gameCondition.wait(gameUniqueLock, [&] { return currentGame->playerX != -1; });
 	}
 	else 
 	{
