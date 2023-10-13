@@ -446,9 +446,9 @@ void PlayGame(Player *currentPlayer, Game *currentGame)
 				// TODO:: The game is not over yet. We need to notify the other player that it's
 				//   their turn and then we must wait until they tell us it's our turn.
 				///////////////////////////////////////////////////////////////////////////////////
-
+			
 				if (currentGame->currentTurn == PlayerType::O) {
-					currentGame->gameCondition.notify_all();																
+					currentGame->gameCondition.notify_all();
 					std::unique_lock<std::mutex> TurnLock(currentGame->playerCountMutex);
 					currentGame->gameCondition.wait(TurnLock, [&] { return currentGame->currentTurn == PlayerType::X; });
 				} else {
@@ -540,7 +540,6 @@ void JoinGame(Player *currentPlayer, Game *currentGame)
 	PlayGame(currentPlayer, currentGame);
 	currentGame->gameUniqueLock = nullptr;
 	currentPlayer->gamesPlayed++;
-	//gameUniqueLock.unlock();
 }
 
 ///////////////////////////////////////////////////////////////////////////////////
