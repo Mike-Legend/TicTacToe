@@ -448,15 +448,16 @@ void PlayGame(Player *currentPlayer, Game *currentGame)
 				///////////////////////////////////////////////////////////////////////////////////
 
 				if (currentPlayer->type == PlayerType::X) {
-					currentGame->currentTurn = PlayerType::O;
+					//currentGame->currentTurn = PlayerType::X;
 					currentGame->gameCondition.notify_all();
 					std::unique_lock<std::mutex> TurnLock(currentGame->playerCountMutex);
 					currentGame->gameCondition.wait(TurnLock, [&] { return currentGame->currentTurn == PlayerType::X; });
 				} else {
-					currentGame->currentTurn = PlayerType::X;
+					//currentGame->currentTurn = PlayerType::O;
+					//currentPlayer->type = PlayerType::O;
 					currentGame->gameCondition.notify_all();
 					std::unique_lock<std::mutex> TurnLock(currentGame->playerCountMutex);
-					currentGame->gameCondition.wait(TurnLock, [&] { return currentGame->currentTurn == PlayerType::O; });
+					currentGame->gameCondition.wait(TurnLock, [&] { return currentGame->currentTurn == PlayerType::X; });
 				}
 				continue;
 			case GameState::Won:
@@ -535,7 +536,7 @@ void JoinGame(Player *currentPlayer, Game *currentGame)
 		//   other player to join the game and play it's turn.
 		///////////////////////////////////////////////////////////////////////////////////
 
-		currentGame->gameCondition.wait(gameUniqueLock, [&] { return currentPlayer->type == PlayerType::O; });
+		currentGame->gameCondition.wait(gameUniqueLock, [&] { return currentGame->currentTurn == PlayerType::O; });
 		printf("Player %d joining game %d as 'X'\n", currentPlayer->id, currentGame->gameNumber);
 	}
 	else 
