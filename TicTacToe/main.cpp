@@ -247,12 +247,9 @@ int Log(const char *format, ...)
 	//   but all console output will be synchronized via LogSync.
 	///////////////////////////////////////////////////////////////////////////////////
 
+	//all wrong, need to fix, so not implemented
 	va_list mainList;
 	va_start(mainList, format);
-	//const char* sequence[] = format;
-	/*for (int i = 0; i < format; i++) {
-		sequence = va_arg(mainList, const char*);
-	}*/
 	while (format) {
 		format = va_arg(mainList, const char*);
 	}
