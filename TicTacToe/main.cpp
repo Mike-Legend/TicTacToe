@@ -447,17 +447,14 @@ void PlayGame(Player *currentPlayer, Game *currentGame)
 				//   their turn and then we must wait until they tell us it's our turn.
 				///////////////////////////////////////////////////////////////////////////////////
 
-				if (currentPlayer->type == PlayerType::X) {
-					//currentGame->currentTurn = PlayerType::X;
-					currentGame->gameCondition.notify_all();
+				if (currentGame->currentTurn == PlayerType::O) {
+					currentGame->gameCondition.notify_all();																
 					std::unique_lock<std::mutex> TurnLock(currentGame->playerCountMutex);
 					currentGame->gameCondition.wait(TurnLock, [&] { return currentGame->currentTurn == PlayerType::X; });
 				} else {
-					//currentGame->currentTurn = PlayerType::O;
-					//currentPlayer->type = PlayerType::O;
 					currentGame->gameCondition.notify_all();
 					std::unique_lock<std::mutex> TurnLock(currentGame->playerCountMutex);
-					currentGame->gameCondition.wait(TurnLock, [&] { return currentGame->currentTurn == PlayerType::X; });
+					currentGame->gameCondition.wait(TurnLock, [&] { return currentGame->currentTurn == PlayerType::O; });
 				}
 				continue;
 			case GameState::Won:
@@ -466,12 +463,8 @@ void PlayGame(Player *currentPlayer, Game *currentGame)
 				//   out of the PlayGame function.
 				///////////////////////////////////////////////////////////////////////////////////
 
-				if (currentGame->currentTurn == PlayerType::X) {
-					currentGame->currentTurn = PlayerType::O;
-				}
-				else {
-					currentGame->currentTurn = PlayerType::X;
-				}
+				currentGame->currentTurn = (currentPlayer->type == PlayerType::X) ? PlayerType::O : PlayerType::X;
+				currentGame->gameCondition.notify_all();
 				return;
 			case GameState::Draw:
 				///////////////////////////////////////////////////////////////////////////////////
@@ -479,12 +472,8 @@ void PlayGame(Player *currentPlayer, Game *currentGame)
 				//   out of the PlayGame function
 				///////////////////////////////////////////////////////////////////////////////////
 
-				if (currentGame->currentTurn == PlayerType::X) {
-					currentGame->currentTurn = PlayerType::O;
-				}
-				else {
-					currentGame->currentTurn = PlayerType::X;
-				}
+				currentGame->currentTurn = (currentPlayer->type == PlayerType::X) ? PlayerType::O : PlayerType::X;
+				currentGame->gameCondition.notify_all();
 				return;
 		}
 	}
@@ -536,8 +525,7 @@ void JoinGame(Player *currentPlayer, Game *currentGame)
 		//   other player to join the game and play it's turn.
 		///////////////////////////////////////////////////////////////////////////////////
 
-		currentGame->gameCondition.wait(gameUniqueLock, [&] { return currentGame->currentTurn == PlayerType::O; });
-		printf("Player %d joining game %d as 'X'\n", currentPlayer->id, currentGame->gameNumber);
+		currentGame->gameCondition.wait(gameUniqueLock, [&] { return currentGame->playerX != -1; });	
 	}
 	else 
 	{
@@ -545,12 +533,14 @@ void JoinGame(Player *currentPlayer, Game *currentGame)
 
 		currentGame->playerX = currentPlayer->id;
 		currentPlayer->type = PlayerType::X;
+
+		currentGame->gameUniqueLock->unlock();
 	}
 
 	PlayGame(currentPlayer, currentGame);
 	currentGame->gameUniqueLock = nullptr;
 	currentPlayer->gamesPlayed++;
-	gameUniqueLock.unlock();
+	//gameUniqueLock.unlock();
 }
 
 ///////////////////////////////////////////////////////////////////////////////////
