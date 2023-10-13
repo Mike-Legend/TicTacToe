@@ -281,6 +281,7 @@ void PrintGameBoard(const Game *currentGame)
 	//   your threads running and shutting down before attempting these functions.
 	///////////////////////////////////////////////////////////////////////////////////
 
+	LogSync(LogSyncOperation::Lock);
 	for (int row = 0; row < 3; row++)
 	{
 		for(int col = 0; col < 3; col++)
@@ -297,6 +298,7 @@ void PrintGameBoard(const Game *currentGame)
 		}
 		printf("\n");
 	}
+	LogSync(LogSyncOperation::Unlock);
 }
 
 ///////////////////////////////////////////////////////////////////////////////////
@@ -445,13 +447,15 @@ void PlayGame(Player *currentPlayer, Game *currentGame)
 				//   their turn and then we must wait until they tell us it's our turn.
 				///////////////////////////////////////////////////////////////////////////////////
 
-				if (currentGame->currentTurn == PlayerType::X) {
+				if (currentPlayer->type == PlayerType::X) {
 					currentGame->currentTurn = PlayerType::O;
-					std::unique_lock<std::mutex> TurnLock(currentGame->gameMutex);
+					currentGame->gameCondition.notify_all();
+					std::unique_lock<std::mutex> TurnLock(currentGame->playerCountMutex);
 					currentGame->gameCondition.wait(TurnLock, [&] { return currentGame->currentTurn == PlayerType::X; });
 				} else {
 					currentGame->currentTurn = PlayerType::X;
-					std::unique_lock<std::mutex> TurnLock(currentGame->gameMutex);
+					currentGame->gameCondition.notify_all();
+					std::unique_lock<std::mutex> TurnLock(currentGame->playerCountMutex);
 					currentGame->gameCondition.wait(TurnLock, [&] { return currentGame->currentTurn == PlayerType::O; });
 				}
 				continue;
@@ -531,7 +535,8 @@ void JoinGame(Player *currentPlayer, Game *currentGame)
 		//   other player to join the game and play it's turn.
 		///////////////////////////////////////////////////////////////////////////////////
 
-		currentGame->gameCondition.wait(gameUniqueLock, [&] { return currentGame->playerX != -1; });
+		currentGame->gameCondition.wait(gameUniqueLock, [&] { return currentPlayer->type == PlayerType::O; });
+		printf("Player %d joining game %d as 'X'\n", currentPlayer->id, currentGame->gameNumber);
 	}
 	else 
 	{
