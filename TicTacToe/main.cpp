@@ -247,12 +247,8 @@ int Log(const char *format, ...)
 	//   but all console output will be synchronized via LogSync.
 	///////////////////////////////////////////////////////////////////////////////////
 
-	//all wrong, need to fix, so not implemented
 	va_list mainList;
 	va_start(mainList, format);
-	while (format) {
-		format = va_arg(mainList, const char*);
-	}
 	LogSync(LogSyncOperation::Lock);
 	result = vprintf(format, mainList);
 	LogSync(LogSyncOperation::Unlock);
@@ -374,7 +370,7 @@ GameState MakeAMove(Player *currentPlayer, Game *currentGame)
 		int col = possibleMoves[randomMoveIndex] % 3;
 		currentGame->gameBoard[row][col] = currentPlayer->type;
 
-		printf("Game %d: Player %d: Picked [Row: %d, Col: %d]\n", currentGame->gameNumber, currentPlayer->id, row,  col);
+		Log("Game %d: Player %d: Picked [Row: %d, Col: %d]\n", currentGame->gameNumber, currentPlayer->id, row,  col);
 
 		if (DidWeWin(row, col, currentGame, currentPlayer)) 
 		{ 
